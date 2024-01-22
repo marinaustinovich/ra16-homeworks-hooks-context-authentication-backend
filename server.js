@@ -79,14 +79,14 @@ app.post("/auth", async (req, res) => {
     const user = users.get(login);
     if (user === undefined) {
       return res
-        .status(401)
+        .status(400)
         .send(JSON.stringify({ message: "user not found" }));
     }
 
     const result = await bcrypt.compare(password, user.password);
     if (result === false) {
       return res
-        .status(401)
+        .status(400)
         .send(JSON.stringify({ message: "invalid password" }));
     }
     const token = uuid.v4();
@@ -117,6 +117,17 @@ app.get("/private/me", async (req, res) => {
 app.get("/private/news", async (req, res) => {
   try {
     res.send(JSON.stringify(news));
+  } catch (error) {
+    res.status(500).send(JSON.stringify({ message: "Server internal error" }));
+  }
+});
+app.get("/private/news/:id", async (req, res) => {
+  try {
+    const [item] = news.filter((o) => o.id === req.params.id);
+    if (item === undefined) {
+      return res.status(404).send(JSON.stringify({ message: "not found" }));
+    }
+    res.send(JSON.stringify(item));
   } catch (error) {
     res.status(500).send(JSON.stringify({ message: "Server internal error" }));
   }
